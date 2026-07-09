@@ -33,7 +33,7 @@ def extract_text(uploaded_file):
 def analyze_resume(resume_text):
     prompt = PROMPT.format(resume=resume_text)
     response = ollama.chat(
-        model="gemma3:270m",
+        model="gemma3:279m",
         messages=[
             {"role": "user", "content": prompt}
         ]
@@ -42,12 +42,12 @@ def analyze_resume(resume_text):
 
 # Streamlit UI
 st.set_page_config(
-    page_title="PRAMOD PAWASE RESUME ANALYZER",
+    page_title="RESUME ANALYZER",
     page_icon="📊",
     layout="wide"
 )
 
-st.title("📊 PRAMOD PAWASE RESUME ANALYZER")
+st.title("📊 RESUME ANALYZER")
 st.write("Upload your resume in PDF format, analyze its content and get insights from the data.")
 
 uploaded_file = st.file_uploader("Upload resume", type="pdf")
