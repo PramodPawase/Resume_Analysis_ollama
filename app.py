@@ -33,7 +33,7 @@ def extract_text(uploaded_file):
 def analyze_resume(resume_text):
     prompt = PROMPT.format(resume=resume_text)
     response = ollama.chat(
-        model="gemma3:279m",
+        model="gemma3:270m",
         messages=[
             {"role": "user", "content": prompt}
         ]
