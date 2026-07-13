@@ -197,6 +197,26 @@ class ReportPDF(FPDF):
         )
 
 
+def sanitize_text(text: str) -> str:
+    """Convert 'smart' unicode punctuation to ASCII and drop anything else
+    the built-in PDF fonts can't render (they only support Latin-1)."""
+    replacements = {
+        "\u2018": "'", "\u2019": "'",              # curly single quotes
+        "\u201c": '"', "\u201d": '"',              # curly double quotes
+        "\u2013": "-", "\u2014": "-",              # en dash / em dash
+        "\u2026": "...",                            # ellipsis
+        "\u2022": "-", "\u25cf": "-", "\u2023": "-",  # bullet variants
+        "\u2192": "->", "\u2190": "<-",            # arrows
+        "\u2705": "[OK]", "\u2714": "[OK]", "\u2713": "[OK]",  # checkmarks
+        "\u274c": "[X]", "\u2717": "[X]",          # cross marks
+        "\u00a0": " ",                              # non-breaking space
+    }
+    for bad, good in replacements.items():
+        text = text.replace(bad, good)
+    # anything still outside Latin-1 (emoji, rare symbols) gets dropped
+    return text.encode("latin-1", "ignore").decode("latin-1")
+
+
 def write_rich_line(pdf, text, size=11):
     """Write a line, rendering **bold** markdown segments in bold."""
     pdf.set_font("Helvetica", "", size)
@@ -233,6 +253,8 @@ def generate_pdf(analysis_text: str) -> bytes:
     )
     pdf.set_text_color(0, 0, 0)
     pdf.ln(8)
+
+    analysis_text = sanitize_text(analysis_text)
 
     for raw_line in analysis_text.split("\n"):
         line = raw_line.strip()
