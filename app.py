@@ -3,7 +3,7 @@ from groq import Groq
 import PyPDF2
 
 # Groq client (reads key from Streamlit secrets)
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+client = Groq(api_key=st.secrets["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"])
 
 # Prompt template
 PROMPT = """
