@@ -166,18 +166,13 @@ def analyze_resume(resume_text, api_key):
     return response.choices[0].message.content
 
 
-HEADING_RE = re.compile(r'^\s*\d+\.\s+.+')
+HEADING_RE = re.compile(r'^\s*(\d+)\.\s+.+')
 
 
 class ReportPDF(FPDF):
-    """A4 report with a thin border frame plus a running header/footer."""
+    """A4 report with a running header/footer (no outer page border)."""
 
     def header(self):
-        # border frame on every page
-        self.set_draw_color(79, 70, 229)
-        self.set_line_width(0.6)
-        self.rect(6, 6, self.w - 12, self.h - 12)
-
         if self.page_no() > 1:
             self.set_y(10)
             self.set_font("Helvetica", "B", 11)
@@ -265,19 +260,25 @@ def generate_pdf(analysis_text: str) -> bytes:
 
         clean_line = line.replace("**", "")
 
-        if HEADING_RE.match(clean_line):
-            # section heading: rule + bold larger colored text
+        heading_match = HEADING_RE.match(clean_line)
+        if heading_match:
+            is_primary = heading_match.group(1) == "1"
+            size = 15 if is_primary else 12
+            style = "B" if is_primary else ""
+            color = (37, 99, 235) if is_primary else (30, 41, 59)  # blue vs slate
+
             pdf.ln(3)
-            y = pdf.get_y()
-            pdf.set_draw_color(79, 70, 229)
-            pdf.set_line_width(0.4)
-            pdf.line(18, y, pdf.w - 18, y)
-            pdf.ln(3)
-            pdf.set_font("Helvetica", "B", 13)
-            pdf.set_text_color(55, 48, 163)
+            pdf.set_font("Helvetica", style, size)
+            pdf.set_text_color(*color)
             pdf.multi_cell(0, 8, clean_line)
             pdf.set_text_color(0, 0, 0)
-            pdf.ln(1)
+
+            # border below the heading
+            y = pdf.get_y()
+            pdf.set_draw_color(*color)
+            pdf.set_line_width(0.4)
+            pdf.line(18, y, pdf.w - 18, y)
+            pdf.ln(4)
         elif line.startswith(("-", "*", "•")):
             bullet_text = line.lstrip("-*\u2022 ").strip()
             pdf.set_x(24)
