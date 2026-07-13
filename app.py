@@ -121,9 +121,10 @@ with st.sidebar:
     user_api_key = st.text_input(
         "Enter your API key",
         type="password",
-        help="Your key is used only for this session and is never stored."
+        help="Your key is used only for this session and is never stored.",
+        placeholder="Enter API key"
     )
-    st.caption("Used only for this session — not stored anywhere.")
+    #st.caption("Used only for this session — not stored anywhere.")
 
 # Falls back to a key in Streamlit secrets if you've set one, otherwise uses the sidebar input
 api_key = user_api_key or st.secrets.get("API_KEY", "")
@@ -331,6 +332,6 @@ else:
 # ============================================================
 st.markdown("""
 <div class="app-footer">
-    Made with ❤️ using Streamlit &nbsp;•&nbsp; © 2026 Resume Analyzer
+    Resume Analyzer
 </div>
 """, unsafe_allow_html=True)
