@@ -2,10 +2,25 @@ import streamlit as st
 from groq import Groq
 import PyPDF2
 
-# Groq client (reads key from Streamlit secrets)
-client = Groq(api_key=st.secrets["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"])
+st.set_page_config(
+    page_title="RESUME ANALYZER",
+    page_icon="📊",
+    layout="wide"
+)
 
-# Prompt template
+# --- Sidebar: user supplies their own Groq API key ---
+with st.sidebar:
+    st.header("🔑 Groq API Key")
+    user_api_key = st.text_input(
+        "Enter your Groq API key",
+        type="password",
+        help="Get a free key at https://console.groq.com/keys"
+    )
+    st.caption("Used only for this session — not stored anywhere.")
+
+# Falls back to a key in Streamlit secrets if you've set one, otherwise uses the sidebar input
+api_key = user_api_key or st.secrets.get("GROQ_API_KEY", "")
+
 PROMPT = """
 You are an experienced HR Manager and ATS Resume Expert.
 Analyze the following resume carefully.
@@ -22,7 +37,6 @@ Resume:
 {resume}
 """
 
-# Function to extract text from PDF
 def extract_text(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
     text = ""
@@ -30,8 +44,8 @@ def extract_text(uploaded_file):
         text += page.extract_text() or ""
     return text
 
-# Function to analyze resume using Groq
-def analyze_resume(resume_text):
+def analyze_resume(resume_text, api_key):
+    client = Groq(api_key=api_key)
     prompt = PROMPT.format(resume=resume_text)
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
@@ -41,31 +55,32 @@ def analyze_resume(resume_text):
     )
     return response.choices[0].message.content
 
-# Streamlit UI
-st.set_page_config(
-    page_title="RESUME ANALYZER",
-    page_icon="📊",
-    layout="wide"
-)
 st.title("📊 RESUME ANALYZER")
 st.write("Upload your resume in PDF format, analyze its content and get insights from the data.")
 
-uploaded_file = st.file_uploader("Upload resume", type="pdf")
+if not api_key:
+    st.warning("👈 Enter your Groq API key in the sidebar to get started.")
+else:
+    uploaded_file = st.file_uploader("Upload resume", type="pdf")
 
-if uploaded_file:
-    with st.spinner("Reading resume profile..."):
-        resume = extract_text(uploaded_file)
-    st.success("Resume uploaded successfully ✅")
+    if uploaded_file:
+        with st.spinner("Reading resume profile..."):
+            resume = extract_text(uploaded_file)
+        st.success("Resume uploaded successfully ✅")
 
-    if st.button("Analyze Resume"):
-        with st.spinner("Analyzing resume..."):
-            analysis = analyze_resume(resume)
-        st.success("Resume analysis completed 🎯")
-        st.markdown("### 📑 Analysis Result:")
-        st.write(analysis)
-        st.download_button(
-            label="⬇️ Download Analysis Result",
-            data=analysis,
-            file_name="analysis_result.txt",
-            mime="text/plain"
-        )
+        if st.button("Analyze Resume"):
+            with st.spinner("Analyzing resume..."):
+                try:
+                    analysis = analyze_resume(resume, api_key)
+                except Exception as e:
+                    st.error(f"Something went wrong calling Groq: {e}")
+                    st.stop()
+            st.success("Resume analysis completed 🎯")
+            st.markdown("### 📑 Analysis Result:")
+            st.write(analysis)
+            st.download_button(
+                label="⬇️ Download Analysis Result",
+                data=analysis,
+                file_name="analysis_result.txt",
+                mime="text/plain"
+            )
