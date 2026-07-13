@@ -12,7 +12,7 @@ st.set_page_config(
 with st.sidebar:
     st.header("🔑 Groq API Key")
     user_api_key = st.text_input(
-        "Enter your Groq API key",
+        "Enter key",
         type="password",
         help="Get a free key at https://console.groq.com/keys"
     )
