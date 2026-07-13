@@ -219,6 +219,7 @@ def sanitize_text(text: str) -> str:
 
 def write_rich_line(pdf, text, size=11):
     """Write a line, rendering **bold** markdown segments in bold."""
+    text = sanitize_text(text)  # belt-and-suspenders: never trust the caller
     pdf.set_font("Helvetica", "", size)
     segments = re.split(r'(\*\*.*?\*\*)', text)
     for seg in segments:
@@ -278,9 +279,9 @@ def generate_pdf(analysis_text: str) -> bytes:
             pdf.set_text_color(0, 0, 0)
             pdf.ln(1)
         elif line.startswith(("-", "*", "•")):
-            bullet_text = line.lstrip("-*• ").strip()
+            bullet_text = line.lstrip("-*\u2022 ").strip()
             pdf.set_x(24)
-            write_rich_line(pdf, f"•  {bullet_text}", size=11)
+            write_rich_line(pdf, f"-  {bullet_text}", size=11)
         else:
             write_rich_line(pdf, clean_line, size=11)
 
